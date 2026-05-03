@@ -1,0 +1,208 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+.app{background:#b8c0ff;min-height:100vh;padding:0 0 2rem;font-family:var(--font-sans);}
+.app-header{background:#03045e;padding:1.25rem 1rem 1rem;text-align:center;}
+.app-title{font-size:20px;font-weight:500;color:#caf0f8;letter-spacing:0.5px;}
+.app-sub{font-size:12px;color:#90e0ef;margin-top:3px;}
+.days{padding:0.75rem;}
+.day-card{background:#caf0f8;border-radius:14px;margin-bottom:10px;overflow:hidden;}
+.day-header{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;cursor:pointer;background:#0077b6;border-radius:14px;transition:background 0.2s;}
+.day-header.open{border-radius:14px 14px 0 0;}
+.day-name{font-size:15px;font-weight:500;color:#caf0f8;}
+.day-meta{font-size:11px;color:#90e0ef;margin-top:2px;}
+.chevron{width:18px;height:18px;flex-shrink:0;transition:transform 0.25s;}
+.chevron.open{transform:rotate(180deg);}
+.day-body{background:#caf0f8;display:none;padding:10px 10px 12px;}
+.day-body.open{display:block;}
+.rest-body{background:#00b4d8;padding:14px 16px;border-radius:0 0 14px 14px;text-align:center;font-size:13px;color:#03045e;font-weight:500;}
+.slot{display:flex;align-items:stretch;gap:8px;margin-bottom:7px;}
+.slot:last-child{margin-bottom:0;}
+.slot-time{font-size:10px;color:#0077b6;width:42px;flex-shrink:0;padding-top:9px;text-align:right;font-weight:500;}
+.slot-bar{width:3px;border-radius:2px;flex-shrink:0;}
+.slot-content{flex:1;border-radius:8px;padding:7px 10px;}
+.slot-name{font-size:13px;font-weight:500;}
+.slot-dur{font-size:10px;margin-top:1px;}
+.s-physics{background:#b8d8f8;}.s-physics .slot-name{color:#03045e;}.s-physics .slot-dur{color:#0077b6;}.s-physics .slot-bar{background:#0077b6;}
+.s-bio{background:#b3f0e0;}.s-bio .slot-name{color:#03045e;}.s-bio .slot-dur{color:#0f6e56;}.s-bio .slot-bar{background:#1d9e75;}
+.s-chem{background:#d4eeff;}.s-chem .slot-name{color:#03045e;}.s-chem .slot-dur{color:#0077b6;}.s-chem .slot-bar{background:#00b4d8;}
+.s-precalc{background:#faeeda;}.s-precalc .slot-name{color:#412402;}.s-precalc .slot-dur{color:#854f0b;}.s-precalc .slot-bar{background:#ef9f27;}
+.s-euc{background:#e2f5d0;}.s-euc .slot-name{color:#173404;}.s-euc .slot-dur{color:#3b6d11;}.s-euc .slot-bar{background:#639922;}
+.s-comm{background:#eeedfe;}.s-comm .slot-name{color:#26215c;}.s-comm .slot-dur{color:#534ab7;}.s-comm .slot-bar{background:#7f77dd;}
+.s-break{background:#e8f8fb;}.s-break .slot-name{color:#0077b6;}.s-break .slot-dur{color:#00b4d8;}.s-break .slot-bar{background:#90e0ef;}
+.s-lunch{background:#d0f0f8;}.s-lunch .slot-name{color:#03045e;}.s-lunch .slot-dur{color:#0077b6;}.s-lunch .slot-bar{background:#00b4d8;}
+.s-review{background:#fbeaf0;}.s-review .slot-name{color:#4b1528;}.s-review .slot-dur{color:#993556;}.s-review .slot-bar{background:#d4537e;}
+.legend{margin:0.5rem 0.75rem 0;background:#0077b6;border-radius:12px;padding:12px 14px;}
+.legend-title{font-size:11px;color:#90e0ef;margin-bottom:8px;font-weight:500;}
+.legend-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.leg{display:flex;align-items:center;gap:6px;font-size:11px;color:#caf0f8;}
+.leg-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0;}
+</style>
+
+<div class="app">
+  <h2 style="position:absolute;width:1px;height:1px;overflow:hidden;">Study timetable Monday to Saturday with expandable days</h2>
+  <div class="app-header">
+    <div class="app-title">Study Timetable</div>
+    <div class="app-sub">Mon – Sat · 6 hrs/day · Fri rest</div>
+  </div>
+
+  <div class="days" id="days"></div>
+
+  <div class="legend">
+    <div class="legend-title">Subjects</div>
+    <div class="legend-grid">
+      <div class="leg"><div class="leg-dot" style="background:#0077b6"></div>Physics</div>
+      <div class="leg"><div class="leg-dot" style="background:#1d9e75"></div>Biology</div>
+      <div class="leg"><div class="leg-dot" style="background:#00b4d8"></div>Chemistry</div>
+      <div class="leg"><div class="leg-dot" style="background:#ef9f27"></div>Precalculus</div>
+      <div class="leg"><div class="leg-dot" style="background:#639922"></div>End User Computing</div>
+      <div class="leg"><div class="leg-dot" style="background:#7f77dd"></div>Communication</div>
+      <div class="leg"><div class="leg-dot" style="background:#90e0ef"></div>Break</div>
+      <div class="leg"><div class="leg-dot" style="background:#d4537e"></div>Daily review</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const DAYS = [
+  {
+    name: "Monday", meta: "Physics · Precalc · Bio · Chem · EUC", rest: false,
+    slots: [
+      {t:"8:00", n:"Physics", d:"45 min", c:"s-physics"},
+      {t:"8:45", n:"Physics", d:"45 min", c:"s-physics"},
+      {t:"9:30", n:"Break", d:"15 min", c:"s-break"},
+      {t:"9:45", n:"Precalculus", d:"45 min", c:"s-precalc"},
+      {t:"10:30", n:"Precalculus", d:"45 min", c:"s-precalc"},
+      {t:"11:15", n:"Break", d:"15 min", c:"s-break"},
+      {t:"11:30", n:"Biology", d:"45 min", c:"s-bio"},
+      {t:"12:15", n:"Lunch", d:"45 min", c:"s-lunch"},
+      {t:"1:00", n:"Chemistry", d:"45 min", c:"s-chem"},
+      {t:"1:45", n:"Break", d:"15 min", c:"s-break"},
+      {t:"2:00", n:"End User Computing", d:"45 min", c:"s-euc"},
+      {t:"2:45", n:"Daily review", d:"20 min", c:"s-review"},
+    ]
+  },
+  {
+    name: "Tuesday", meta: "Bio · Chem · EUC · Comm · Precalc", rest: false,
+    slots: [
+      {t:"8:00", n:"Biology", d:"45 min", c:"s-bio"},
+      {t:"8:45", n:"Biology", d:"45 min", c:"s-bio"},
+      {t:"9:30", n:"Break", d:"15 min", c:"s-break"},
+      {t:"9:45", n:"Chemistry", d:"45 min", c:"s-chem"},
+      {t:"10:30", n:"Chemistry", d:"45 min", c:"s-chem"},
+      {t:"11:15", n:"Break", d:"15 min", c:"s-break"},
+      {t:"11:30", n:"End User Computing", d:"45 min", c:"s-euc"},
+      {t:"12:15", n:"Lunch", d:"45 min", c:"s-lunch"},
+      {t:"1:00", n:"Precalculus", d:"45 min", c:"s-precalc"},
+      {t:"1:45", n:"Break", d:"15 min", c:"s-break"},
+      {t:"2:00", n:"Communication", d:"45 min", c:"s-comm"},
+      {t:"2:45", n:"Daily review", d:"20 min", c:"s-review"},
+    ]
+  },
+  {
+    name: "Wednesday", meta: "Physics · Chem · Bio · Comm · Precalc", rest: false,
+    slots: [
+      {t:"8:00", n:"Physics", d:"45 min", c:"s-physics"},
+      {t:"8:45", n:"Chemistry", d:"45 min", c:"s-chem"},
+      {t:"9:30", n:"Break", d:"15 min", c:"s-break"},
+      {t:"9:45", n:"Physics", d:"45 min", c:"s-physics"},
+      {t:"10:30", n:"Biology", d:"45 min", c:"s-bio"},
+      {t:"11:15", n:"Break", d:"15 min", c:"s-break"},
+      {t:"11:30", n:"Communication", d:"45 min", c:"s-comm"},
+      {t:"12:15", n:"Lunch", d:"45 min", c:"s-lunch"},
+      {t:"1:00", n:"Biology", d:"45 min", c:"s-bio"},
+      {t:"1:45", n:"Break", d:"15 min", c:"s-break"},
+      {t:"2:00", n:"Precalculus", d:"45 min", c:"s-precalc"},
+      {t:"2:45", n:"Chemistry", d:"45 min", c:"s-chem"},
+    ]
+  },
+  {
+    name: "Thursday", meta: "Bio · Chem · Physics · Precalc · EUC · Comm", rest: false,
+    slots: [
+      {t:"8:00", n:"Biology", d:"45 min", c:"s-bio"},
+      {t:"8:45", n:"Biology", d:"45 min", c:"s-bio"},
+      {t:"9:30", n:"Break", d:"15 min", c:"s-break"},
+      {t:"9:45", n:"Chemistry", d:"45 min", c:"s-chem"},
+      {t:"10:30", n:"Precalculus", d:"45 min", c:"s-precalc"},
+      {t:"11:15", n:"Break", d:"15 min", c:"s-break"},
+      {t:"11:30", n:"Physics", d:"45 min", c:"s-physics"},
+      {t:"12:15", n:"Lunch", d:"45 min", c:"s-lunch"},
+      {t:"1:00", n:"End User Computing", d:"45 min", c:"s-euc"},
+      {t:"1:45", n:"Break", d:"15 min", c:"s-break"},
+      {t:"2:00", n:"Communication", d:"45 min", c:"s-comm"},
+      {t:"2:45", n:"Daily review", d:"20 min", c:"s-review"},
+    ]
+  },
+  {
+    name: "Friday", meta: "Rest day — you earned it", rest: true, slots: []
+  },
+  {
+    name: "Saturday", meta: "Light day · 3 hrs only", rest: false,
+    slots: [
+      {t:"8:00", n:"Precalculus", d:"45 min", c:"s-precalc"},
+      {t:"8:45", n:"Precalculus", d:"45 min", c:"s-precalc"},
+      {t:"9:30", n:"Break", d:"15 min", c:"s-break"},
+      {t:"9:45", n:"Biology", d:"45 min", c:"s-bio"},
+      {t:"10:30", n:"Biology", d:"45 min", c:"s-bio"},
+      {t:"11:15", n:"Break", d:"15 min", c:"s-break"},
+      {t:"11:30", n:"Chemistry", d:"45 min", c:"s-chem"},
+    ]
+  },
+];
+
+const container = document.getElementById("days");
+
+DAYS.forEach((day, i) => {
+  const card = document.createElement("div");
+  card.className = "day-card";
+
+  const hdr = document.createElement("div");
+  hdr.className = "day-header";
+  hdr.innerHTML = `
+    <div>
+      <div class="day-name">${day.name}</div>
+      <div class="day-meta">${day.meta}</div>
+    </div>
+    <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="#90e0ef" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="6 9 12 15 18 9"/>
+    </svg>`;
+  card.appendChild(hdr);
+
+  if (day.rest) {
+    const rb = document.createElement("div");
+    rb.className = "rest-body";
+    rb.textContent = "Rest day — recharge for the week ahead";
+    rb.style.display = "none";
+    card.appendChild(rb);
+    hdr.addEventListener("click", () => {
+      const open = rb.style.display === "block";
+      rb.style.display = open ? "none" : "block";
+      hdr.querySelector(".chevron").classList.toggle("open", !open);
+      hdr.classList.toggle("open", !open);
+    });
+  } else {
+    const body = document.createElement("div");
+    body.className = "day-body";
+    day.slots.forEach(s => {
+      body.innerHTML += `
+        <div class="slot">
+          <div class="slot-time">${s.t}</div>
+          <div class="slot-content ${s.c}">
+            <div class="slot-bar"></div>
+            <div class="slot-name">${s.n}</div>
+            <div class="slot-dur">${s.d}</div>
+          </div>
+        </div>`;
+    });
+    card.appendChild(body);
+    hdr.addEventListener("click", () => {
+      const open = body.classList.contains("open");
+      body.classList.toggle("open", !open);
+      hdr.querySelector(".chevron").classList.toggle("open", !open);
+      hdr.classList.toggle("open", !open);
+    });
+  }
+
+  container.appendChild(card);
+});
+</script>
